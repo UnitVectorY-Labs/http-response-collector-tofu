@@ -30,6 +30,19 @@ resource "google_pubsub_topic" "request" {
   name    = "${var.name}-request"
 }
 
+# Pub/Sub topic to receive responses and forward to BigQuery
+resource "google_pubsub_topic" "response" {
+  project = var.project_id
+  name    = "${var.name}-response"
+}
+
+resource "google_pubsub_topic_iam_member" "response" {
+  project = var.project_id
+  topic = google_pubsub_topic.response.name
+  role = "roles/pubsub.publisher"
+  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+}
+
 locals {
   final_artifact_registry_project_id = coalesce(var.artifact_registry_project_id, var.project_id)
 }
@@ -55,7 +68,7 @@ resource "google_cloud_run_v2_service" "http_response_collector" {
       }
       env {
         name  = "RESPONSE_PUBSUB"
-        value = var.name
+        value = google_pubsub_topic.response.name
       }
     }
   }
