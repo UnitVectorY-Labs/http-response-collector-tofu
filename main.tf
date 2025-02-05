@@ -20,7 +20,7 @@ resource "google_project_service" "pubsub" {
 # Service account for Cloud Run services
 resource "google_service_account" "cloud_run_sa" {
   project      = var.project_id
-  account_id   = "${var.name}-sa"
+  account_id   = "${var.name}-cr-sa"
   display_name = "${var.name} Cloud Run Service Account"
 }
 
@@ -83,7 +83,7 @@ resource "google_cloud_run_v2_service" "http_response_collector" {
 # Service account for Eventarc triggers
 resource "google_service_account" "eventarc_sa" {
   project      = var.project_id
-  account_id   = "${var.name}-eventarc-sa"
+  account_id   = "${var.name}-ea-sa"
   display_name = "${var.name} Eventarc Service Account"
 }
 
@@ -121,7 +121,7 @@ resource "google_pubsub_subscription" "pubsub_subscription" {
 # The BigQuery dataset
 resource "google_bigquery_dataset" "dataset" {
   project                    = var.project_id
-  dataset_id                 = var.name
+  dataset_id                 = replace(var.name, "-", "_") # BigQuery dataset names cannot contain hyphens
   friendly_name              = var.name
   description                = "Dataset ${var.name}"
   location                   = var.region
@@ -136,6 +136,8 @@ resource "google_bigquery_table" "table" {
   deletion_protection = false
 
   clustering = ["url", "requestTime"]
+
+  require_partition_filter = false
 
   time_partitioning {
     type = "MONTH" # Is this right or should it be "Day"?
@@ -199,7 +201,7 @@ EOF
 # Service account for Eventarc triggers
 resource "google_service_account" "bigquery_sa" {
   project      = var.project_id
-  account_id   = "${var.name}-bigquery-sa"
+  account_id   = "${var.name}-bq-sa"
   display_name = "${var.name} Eventarc Service Account"
 }
 
