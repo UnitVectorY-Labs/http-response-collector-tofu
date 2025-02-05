@@ -135,12 +135,14 @@ resource "google_bigquery_table" "table" {
   table_id            = "crawl"
   deletion_protection = false
 
-  clustering = ["url", "requestTime"]
+  clustering = ["url"]
 
-  require_partition_filter = false
+  require_partition_filter = true
 
   time_partitioning {
-    type = "MONTH" # Is this right or should it be "Day"?
+    type  = "DAY"
+    field = "requestTime"
+
   }
 
   schema = <<EOF
