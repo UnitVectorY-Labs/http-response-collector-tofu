@@ -74,10 +74,6 @@ resource "google_cloud_run_v2_service" "http_response_collector" {
       }
     }
   }
-
-  depends_on = [
-    // TODO
-  ]
 }
 
 # Service account for Eventarc triggers
@@ -104,6 +100,10 @@ resource "google_pubsub_subscription" "pubsub_subscription" {
   enable_message_ordering = true
 
   ack_deadline_seconds = 60
+
+  expiration_policy {
+    ttl = ""
+  }
 
   push_config {
     push_endpoint = "${google_cloud_run_v2_service.http_response_collector.uri}/pubsub/push"
@@ -223,6 +223,12 @@ resource "google_pubsub_subscription" "bigquery_subscription" {
     use_table_schema      = true
   }
 
+  ack_deadline_seconds = 60
+
+  expiration_policy {
+    ttl = ""
+  }
+
   dead_letter_policy {
     dead_letter_topic     = google_pubsub_topic.response_dead_letter.id
     max_delivery_attempts = 10
@@ -251,8 +257,9 @@ resource "google_pubsub_subscription" "response_dead_letter_subscription" {
   ack_deadline_seconds = 60
 
   expiration_policy {
-    ttl = "300000.5s"
+    ttl = ""
   }
+
   retry_policy {
     minimum_backoff = "10s"
   }
