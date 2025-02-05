@@ -59,6 +59,8 @@ resource "google_cloud_run_v2_service" "http_response_collector" {
   template {
     service_account = google_service_account.cloud_run_sa.email
 
+    timeout = "60s"
+
     containers {
       image = "${var.artifact_registry_host}/${local.final_artifact_registry_project_id}/${var.artifact_registry_name}/unitvectory-labs/http-response-collector:${var.http_response_collector_tag}"
 
@@ -100,6 +102,8 @@ resource "google_pubsub_subscription" "pubsub_subscription" {
   name                    = "bqpas-${var.name}-${var.region}"
   topic                   = google_pubsub_topic.request.name
   enable_message_ordering = true
+
+  ack_deadline_seconds = 60
 
   push_config {
     push_endpoint = "${google_cloud_run_v2_service.http_response_collector.uri}/pubsub/push"
